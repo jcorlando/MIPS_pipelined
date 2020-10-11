@@ -1,0 +1,7 @@
+MIPS_pipelined.xpr
+tb_MIPS_pipelined_behav.wcfg
+/MIPS_pipelined.cache/
+/MIPS_pipelined.hw/
+/MIPS_pipelined.ip_user_files/
+/MIPS_pipelined.sim/
+/MIPS_pipelined.runs/
