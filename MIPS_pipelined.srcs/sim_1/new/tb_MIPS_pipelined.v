@@ -34,7 +34,7 @@ wire [WL - 1 : 0] Result = DUT.Result;                              // Result mu
 // Instantiate DUT
     top # ( .WL(WL), .MEM_Depth(MEM_Depth) ) DUT( .CLK(CLK) );      // Clock
 // Clock generation
-always #8 CLK <= ~CLK;
+always #80 CLK <= ~CLK;
     initial
     begin
         CLK <= 0;                                   // Clock
