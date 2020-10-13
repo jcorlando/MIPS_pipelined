@@ -3,7 +3,7 @@
 module reg_File # (parameter WL = 32)
 (
     input CLK,
-    input RFWE,
+    input RegWriteW,
     input [4 : 0] RFR1, RFR2, RFWA,
     input [WL - 1 : 0] RFWD,
     output [WL - 1 : 0] RFRD1, RFRD2
@@ -16,7 +16,7 @@ module reg_File # (parameter WL = 32)
     
     always @ (posedge CLK)
     begin
-        if (RFWE) begin rf[RFWA] <= RFWD; end
+        if (RegWriteW) begin rf[RFWA] <= RFWD; end
     end
 endmodule
 

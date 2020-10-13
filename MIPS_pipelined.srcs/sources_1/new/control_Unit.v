@@ -3,14 +3,14 @@
 module control_Unit # ( parameter WL = 32 )
 (
     input [WL - 1 : 0] instruction,
-    output reg RFWE,
-    output reg DMWE,
+    output reg RegWriteD,
+    output reg MemWriteD,
     output reg ALUSrc,
     output reg MemtoReg,
     output reg RegDst,
     output reg Branch,
     output reg Jump,
-    output reg [3 : 0] ALU_Control
+    output reg [3 : 0] ALUControlD
 );
     wire [5 : 0] opcode = instruction[31 : 26];
     wire [4 : 0] rs = instruction[25 : 21];
@@ -27,9 +27,9 @@ module control_Unit # ( parameter WL = 32 )
         case(opcode)
             35:     //  LW  I-Type
             begin
-                ALU_Control <= 4'b0000;
-                RFWE <= 1;
-                DMWE <= 0;
+                ALUControlD <= 4'b0000;
+                RegWriteD <= 1;
+                MemWriteD <= 0;
                 ALUSrc <= 1;
                 MemtoReg <= 1;
                 RegDst <= 0;
@@ -39,9 +39,9 @@ module control_Unit # ( parameter WL = 32 )
             
             43:     //  SW  I-Type
             begin
-                ALU_Control <= 4'b0000;
-                RFWE <= 0;
-                DMWE <= 1;
+                ALUControlD <= 4'b0000;
+                RegWriteD <= 0;
+                MemWriteD <= 1;
                 ALUSrc <= 1;
                 MemtoReg <= 1;
                 RegDst <= 0;
@@ -54,9 +54,9 @@ module control_Unit # ( parameter WL = 32 )
                 case(funct)
                     32:     //  ADD
                     begin
-                        ALU_Control <= 4'b0000;
-                        RFWE <= 1;
-                        DMWE <= 0;
+                        ALUControlD <= 4'b0000;
+                        RegWriteD <= 1;
+                        MemWriteD <= 0;
                         ALUSrc <= 0;
                         MemtoReg <= 0;
                         RegDst <= 1;
@@ -66,9 +66,9 @@ module control_Unit # ( parameter WL = 32 )
                     
                     34:     //  SUB
                     begin
-                        ALU_Control <= 4'b0001;
-                        RFWE <= 1;
-                        DMWE <= 0;
+                        ALUControlD <= 4'b0001;
+                        RegWriteD <= 1;
+                        MemWriteD <= 0;
                         ALUSrc <= 0;
                         MemtoReg <= 0;
                         RegDst <= 1;
@@ -78,9 +78,9 @@ module control_Unit # ( parameter WL = 32 )
                     
                     4:     //  SLLV
                     begin
-                        ALU_Control <= 4'b0100;
-                        RFWE <= 1;
-                        DMWE <= 0;
+                        ALUControlD <= 4'b0100;
+                        RegWriteD <= 1;
+                        MemWriteD <= 0;
                         ALUSrc <= 0;
                         MemtoReg <= 0;
                         RegDst <= 1;
@@ -90,9 +90,9 @@ module control_Unit # ( parameter WL = 32 )
                     
                     7:     //  SRAV
                     begin
-                        ALU_Control <= 4'b0101;
-                        RFWE <= 1;
-                        DMWE <= 0;
+                        ALUControlD <= 4'b0101;
+                        RegWriteD <= 1;
+                        MemWriteD <= 0;
                         ALUSrc <= 0;
                         MemtoReg <= 0;
                         RegDst <= 1;
@@ -102,9 +102,9 @@ module control_Unit # ( parameter WL = 32 )
                     
                     0:     //  SLL 
                     begin
-                        ALU_Control <= 4'b0010;
-                        RFWE <= 1;
-                        DMWE <= 0;
+                        ALUControlD <= 4'b0010;
+                        RegWriteD <= 1;
+                        MemWriteD <= 0;
                         ALUSrc <= 0;
                         MemtoReg <= 0;
                         RegDst <= 1;
@@ -116,9 +116,9 @@ module control_Unit # ( parameter WL = 32 )
             
             8:    // ADDI  I-Type
             begin
-                ALU_Control <= 4'b0000;
-                RFWE <= 1;
-                DMWE <= 0;
+                ALUControlD <= 4'b0000;
+                RegWriteD <= 1;
+                MemWriteD <= 0;
                 ALUSrc <= 1;
                 MemtoReg <= 0;
                 RegDst <= 0;
@@ -128,9 +128,9 @@ module control_Unit # ( parameter WL = 32 )
             
             4:    // BEQ  I-Type
             begin
-                ALU_Control <= 4'b0001;
-                RFWE <= 0;
-                DMWE <= 0;
+                ALUControlD <= 4'b0001;
+                RegWriteD <= 0;
+                MemWriteD <= 0;
                 ALUSrc <= 0;
                 MemtoReg <= 1;
                 RegDst <= 0;
@@ -140,9 +140,9 @@ module control_Unit # ( parameter WL = 32 )
             
             2:    // Jump  J-Type
             begin
-                ALU_Control <= 4'b0000;
-                RFWE <= 0;
-                DMWE <= 0;
+                ALUControlD <= 4'b0000;
+                RegWriteD <= 0;
+                MemWriteD <= 0;
                 ALUSrc <= 1;
                 MemtoReg <= 1;
                 RegDst <= 0;
@@ -152,9 +152,9 @@ module control_Unit # ( parameter WL = 32 )
             
             default:    // Default
             begin
-                ALU_Control <= 4'b0000;
-                RFWE <= 0;
-                DMWE <= 0;
+                ALUControlD <= 4'b0000;
+                RegWriteD <= 0;
+                MemWriteD <= 0;
                 ALUSrc <= 1;
                 MemtoReg <= 1;
                 RegDst <= 0;

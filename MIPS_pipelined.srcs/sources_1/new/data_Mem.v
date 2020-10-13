@@ -2,7 +2,7 @@
 
 module data_Mem # ( parameter WL = 32, MEM_Depth = 512 )
 (
-    input CLK, DMWE,
+    input CLK, MemWriteM,
     input signed [WL - 1 : 0] DMA,
     input [WL - 1 : 0] DMWD,
     output [WL - 1 : 0] DMRD
@@ -14,7 +14,7 @@ module data_Mem # ( parameter WL = 32, MEM_Depth = 512 )
     assign DMRD = ram[DMA[WL - 1 : 0]];        // Word Aligned
     
     always @ (posedge CLK)
-    if (DMWE) ram[DMA[WL - 1 : 0]] <= DMWD;    // Word Aligned
+    if (MemWriteM) ram[DMA[WL - 1 : 0]] <= DMWD;    // Word Aligned
     
     
 endmodule
