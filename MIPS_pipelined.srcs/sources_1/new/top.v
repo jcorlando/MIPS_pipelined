@@ -109,7 +109,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     
     mux # ( .WL(5) )                                                                                 // WriteReg mux
-        WriteRegMux( .A(rtE), .B(rdE), .sel(RegDstE), .out(WriteReg) );                               // WriteReg mux
+        WriteRegMux( .A(rdE), .B(rtE), .sel(RegDstE), .out(WriteReg) );                               // WriteReg mux
     
     
     mux # ( .WL(WL) )                                                                                   // ALU source mux
