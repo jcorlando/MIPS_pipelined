@@ -72,10 +72,17 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     wire [4 : 0] WriteRegM;                                                     // execute_memory_register
     wire [WL - 1 : 0] PCBranchM;                                                // execute_memory_register
     
-    wire [WL - 1 : 0] DMA;                                      // Data Memory
-    wire [WL - 1 : 0] DMWD = RFRD2;                             // Data Memory
-    wire [WL - 1 : 0] DMRD;                                     // Data Memory
-    wire [WL - 1 : 0] Result;                                   // Result mux out
+    wire [WL - 1 : 0] DMA;                                                      // Data Memory
+    wire [WL - 1 : 0] DMWD = RFRD2;                                           // Data Memory
+    wire [WL - 1 : 0] DMRD;                                                     // Data Memory
+    
+    wire RegWriteW;                                                             // memory_writeback_register
+    wire MemtoRegW;                                                             // memory_writeback_register
+    wire signed [WL - 1 : 0] ALUOutW;                                           // memory_writeback_register
+    wire [WL - 1 : 0] ReadDataW;                                                // memory_writeback_register
+    wire [4 : 0] WriteRegW;                                                     // memory_writeback_register
+    
+    wire [WL - 1 : 0] Result;                                                   // Result mux out
     
     
     mux # ( .WL(WL) )                                                                                   // PCSrc Mux
@@ -109,7 +116,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     
     reg_File # ( .WL(WL) )                                                                              // Register File
-        registerFile( .CLK(CLK), .RegWriteW(RegWriteM), .RFR1(rs), .RFR2(rt), .RFWA(WriteRegM),         // Register File
+        registerFile( .CLK(CLK), .RegWriteW(RegWriteW), .RFR1(rs), .RFR2(rt), .RFWA(WriteRegW),         // Register File
                         .RFWD(Result), .RFRD1(RFRD1), .RFRD2(RFRD2) );                                  // Register File
     
     
@@ -154,13 +161,16 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
         dataMemory( .CLK(CLK), .MemWriteM(MemWriteM), .DMA(ALUOutM), .DMWD(WriteDataM), .DMRD(DMRD) );          // Data Memory
     
     
+                                                            // Memory/Writeback Register
+    memory_writeback_register memory_writeback_register
+    (
+      .CLK(CLK), .RegWriteM(RegWriteM), .MemtoRegM(MemtoRegM), 
+      .ALUOutM(ALUOutM), .DMRD(DMRD), .WriteRegM(WriteRegM), 
+      .RegWriteW(RegWriteW), .MemtoRegW(MemtoRegW), .ALUOutW(ALUOutW), 
+      .ReadDataW(ReadDataW), .WriteRegW(WriteRegW)
+    );
     
-    
-    
-    
-    
-    
-    mux # ( .WL(WL) )                                                                                           // result mux
-        resultMux( .A(DMRD), .B(ALUOutM), .sel(MemtoRegM), .out(Result) );                                      // result mux
+    mux # ( .WL(WL) )                                                                                   // result mux
+        resultMux( .A(ReadDataW), .B(ALUOutW), .sel(MemtoRegW), .out(Result) );                         // result mux
     
 endmodule
