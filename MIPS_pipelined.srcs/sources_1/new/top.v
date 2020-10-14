@@ -130,7 +130,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
         ALUSrcMux( .A(SImmE), .B(RFRD2E), .sel(ALUSrcE), .out(ALUSrcOut) );                             // ALU source mux
     
     
-    PCBranchAdder # (.WL(WL))                                                                        // PCBranch Adder
+    PCBranchAdder # (.WL(WL))                                                                       // PCBranch Adder
         myPCBranchAdder( .A(SImmE), .B(PCPlus1E), .out(PCBranch) );                                 // PCBranch Adder
     
     
@@ -152,6 +152,12 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     data_Mem # ( .WL(WL), .MEM_Depth(MEM_Depth) )                                                               // Data Memory
         dataMemory( .CLK(CLK), .MemWriteM(MemWriteM), .DMA(ALUOutM), .DMWD(WriteDataM), .DMRD(DMRD) );          // Data Memory
+    
+    
+    
+    
+    
+    
     
     
     mux # ( .WL(WL) )                                                                                           // result mux
