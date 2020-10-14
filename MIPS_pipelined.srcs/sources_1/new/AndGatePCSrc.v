@@ -3,7 +3,10 @@
 module AndGatePCSrc
 (
     input A, B,
-    output out
+    output reg out
 );
-    and(out, A, B);
+    initial out <= 0;
+//    and(out, A, B);
+    always @ (*) out <= A & B;
+    
 endmodule
