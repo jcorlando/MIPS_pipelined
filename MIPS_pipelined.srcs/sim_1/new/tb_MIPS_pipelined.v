@@ -25,7 +25,7 @@ wire [4 : 0] RFR2 = DUT.RFR2;                                       // Register 
 wire [WL - 1 : 0] rf[0 : 31] = DUT.registerFile.rf;                 // Register File
 wire [WL - 1 : 0] ALUSrcOut = DUT.ALUSrcOut;                        // ALU Source mux out
 wire signed [WL - 1 : 0] ALU_Out = DUT.ALU_Out;                     // ALU
-wire MemWriteD = DUT.MemWriteD;                                               // Data Memory
+wire MemWriteD = DUT.MemWriteD;                                     // Data Memory
 wire signed [WL - 1 : 0] DMA = DUT.dataMemory.DMA;                  // Data Memory
 wire [WL - 1 : 0] DMWD = DUT.DMWD;                                  // Data Memory
 wire [WL - 1 : 0] DMRD = DUT.DMRD;                                  // Data Memory
@@ -34,7 +34,7 @@ wire [WL - 1 : 0] Result = DUT.Result;                              // Result mu
 // Instantiate DUT
     top # ( .WL(WL), .MEM_Depth(MEM_Depth) ) DUT( .CLK(CLK) );      // Clock
 // Clock generation
-always #30 CLK <= ~CLK;
+always #20 CLK <= ~CLK;
     initial
     begin
         CLK <= 0;                                   // Clock

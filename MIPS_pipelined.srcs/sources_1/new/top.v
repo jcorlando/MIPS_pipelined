@@ -161,13 +161,12 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
         dataMemory( .CLK(CLK), .MemWriteM(MemWriteM), .DMA(ALUOutM), .DMWD(WriteDataM), .DMRD(DMRD) );          // Data Memory
     
     
-                                                            // Memory/Writeback Register
-    memory_writeback_register memory_writeback_register
-    (
-      .CLK(CLK), .RegWriteM(RegWriteM), .MemtoRegM(MemtoRegM), 
-      .ALUOutM(ALUOutM), .DMRD(DMRD), .WriteRegM(WriteRegM), 
-      .RegWriteW(RegWriteW), .MemtoRegW(MemtoRegW), .ALUOutW(ALUOutW), 
-      .ReadDataW(ReadDataW), .WriteRegW(WriteRegW)
+    memory_writeback_register memory_writeback_register                                 // Memory/Writeback Register
+    (                                                                                   // Memory/Writeback Register
+      .CLK(CLK), .RegWriteM(RegWriteM), .MemtoRegM(MemtoRegM),                          // Memory/Writeback Register
+      .ALUOutM(ALUOutM), .DMRD(DMRD), .WriteRegM(WriteRegM),                            // Memory/Writeback Register
+      .RegWriteW(RegWriteW), .MemtoRegW(MemtoRegW), .ALUOutW(ALUOutW),                  // Memory/Writeback Register
+      .ReadDataW(ReadDataW), .WriteRegW(WriteRegW)                                      // Memory/Writeback Register
     );
     
     mux # ( .WL(WL) )                                                                                   // result mux
