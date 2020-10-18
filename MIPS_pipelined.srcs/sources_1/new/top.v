@@ -50,6 +50,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     wire RegDstE;                                               // decode_execute_register
     wire [WL - 1 : 0] RFRD1E;                                   // decode_execute_register
     wire [WL - 1 : 0] RFRD2E;                                   // decode_execute_register
+    wire [4 : 0] rsE;                                           // decode_execute_register
     wire [4 : 0] rtE;                                           // decode_execute_register
     wire [4 : 0] rdE;                                           // decode_execute_register
     wire [WL - 1 : 0] SImmE;                                    // decode_execute_register
@@ -73,7 +74,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     wire [WL - 1 : 0] PCBranchM;                                                // execute_memory_register
     
     wire [WL - 1 : 0] DMA;                                                      // Data Memory
-    wire [WL - 1 : 0] DMWD = RFRD2;                                           // Data Memory
+    wire [WL - 1 : 0] DMWD = RFRD2;                                             // Data Memory
     wire [WL - 1 : 0] DMRD;                                                     // Data Memory
     
     wire RegWriteW;                                                             // memory_writeback_register
@@ -122,11 +123,21 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     decode_execute_register decode_execute_register(  .CLK(CLK), .RegWriteD(RegWriteD),                 // Decode/Execute Register
     .MemtoReg(MemtoReg), .MemWriteD(MemWriteD), .Branch(Branch), .ALUControlD(ALUControlD),             // Decode/Execute Register
-    .ALUSrc(ALUSrc), .RegDst(RegDst), .RFRD1(RFRD1), .RFRD2(RFRD2), .rt(rt), .rd(rd),                   // Decode/Execute Register
+    .ALUSrc(ALUSrc), .RegDst(RegDst), .RFRD1(RFRD1), .RFRD2(RFRD2), .rs(rs), .rt(rt), .rd(rd),          // Decode/Execute Register
     .SImm(SImm), .PCPlus1D(PCPlus1D), .RegWriteE(RegWriteE), .MemtoRegE(MemtoRegE),                     // Decode/Execute Register
     .MemWriteE(MemWriteE), .BranchE(BranchE), .ALUControlE(ALUControlE), .ALUSrcE(ALUSrcE),             // Decode/Execute Register
-    .RegDstE(RegDstE), .RFRD1E(RFRD1E), .RFRD2E(RFRD2E), .rtE(rtE), .rdE(rdE),                          // Decode/Execute Register
+    .RegDstE(RegDstE), .RFRD1E(RFRD1E), .RFRD2E(RFRD2E), .rsE(rsE), .rtE(rtE), .rdE(rdE),               // Decode/Execute Register
     .SImmE(SImmE), .PCPlus1E(PCPlus1E) );                                                               // Decode/Execute Register
+    
+    
+    hazard_unit hazard_unit( .RegWriteM(RegWriteM), .RegWriteW(RegWriteW), .rsE(rsE), .rtE(rtE),        // Hazard Unit
+     .WriteRegM(WriteRegM), .WriteRegW(WriteRegW) );                                                    // Hazard Unit
+    
+    
+    mux3 RFRD1E_mux3( .sel(hazard_unit.ForwardAE), .in_00(RFRD1E), .in_01(Result), .in_10(ALUOutM) );       // Top 3 Mux
+    
+    
+    mux3 ALUSrcMux_mux3( .sel(hazard_unit.ForwardBE), .in_00(RFRD2E), .in_01(Result), .in_10(ALUOutM) );    // Bot 3 Mux
     
     
     mux # ( .WL(5) )                                                                                    // WriteReg mux
@@ -134,7 +145,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     
     mux # ( .WL(WL) )                                                                                   // ALU source mux
-        ALUSrcMux( .A(SImmE), .B(RFRD2E), .sel(ALUSrcE), .out(ALUSrcOut) );                             // ALU source mux
+        ALUSrcMux( .A(SImmE), .B(ALUSrcMux_mux3.out), .sel(ALUSrcE), .out(ALUSrcOut) );                 // ALU source mux
     
     
     PCBranchAdder # (.WL(WL))                                                                       // PCBranch Adder
@@ -142,13 +153,13 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     
     alu # (  .WL(WL) )                                                                                      // ALU
-        alu( .A(RFRD1E), .B(ALUSrcOut), .shamt(shamt), .ALU_Out(ALU_Out), .zero(zero),                      // ALU
+        alu( .A( RFRD1E_mux3.out ), .B(ALUSrcOut), .shamt(shamt), .ALU_Out(ALU_Out), .zero(zero),           // ALU
                 .ALUControlE(ALUControlE) );                                                                // ALU
     
     
     execute_memory_register execute_memory_register( .CLK(CLK), .RegWriteE(RegWriteE),              // Execute/Memory Register
     .MemtoRegE(MemtoRegE), .MemWriteE(MemWriteE), .BranchE(BranchE), .zero(zero),                   // Execute/Memory Register
-    .ALU_Out(ALU_Out), .RFRD2E(RFRD2E), .WriteReg(WriteReg), .PCBranch(PCBranch),                   // Execute/Memory Register
+    .ALU_Out(ALU_Out), .RFRD2E(ALUSrcMux_mux3.out), .WriteReg(WriteReg), .PCBranch(PCBranch),       // Execute/Memory Register
     .RegWriteM(RegWriteM), .MemtoRegM(MemtoRegM), .MemWriteM(MemWriteM),                            // Execute/Memory Register
     .BranchM(BranchM), .zeroM(zeroM), .ALUOutM(ALUOutM), .WriteDataM(),                             // Execute/Memory Register
     .WriteRegM(WriteRegM), .PCBranchM(PCBranchM) );                                                 // Execute/Memory Register

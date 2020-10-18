@@ -12,6 +12,7 @@ module decode_execute_register # (parameter WL = 32)
     input RegDst,
     input [WL - 1 : 0] RFRD1,
     input [WL - 1 : 0] RFRD2,
+    input [4 : 0] rs,
     input [4 : 0] rt,
     input [4 : 0] rd,
     input [WL - 1 : 0] SImm,
@@ -25,6 +26,7 @@ module decode_execute_register # (parameter WL = 32)
     output reg RegDstE,
     output reg [WL - 1 : 0] RFRD1E,
     output reg [WL - 1 : 0] RFRD2E,
+    output reg [4 : 0] rsE,
     output reg [4 : 0] rtE,
     output reg [4 : 0] rdE,
     output reg [WL - 1 : 0] SImmE,
@@ -39,8 +41,12 @@ module decode_execute_register # (parameter WL = 32)
         ALUControlE <= ALUControlD;
         ALUSrcE <= ALUSrc;
         RegDstE <= RegDst;
+        
+        
         RFRD1E <= RFRD1;
         RFRD2E <= RFRD2;
+        
+        rsE <= rs;
         rtE <= rt;
         rdE <= rd;
         SImmE <= SImm; 
