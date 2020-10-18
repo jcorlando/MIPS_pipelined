@@ -86,6 +86,10 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     wire [WL - 1 : 0] Result;                                                   // Result mux out
     
+    wire FlushE;                                                                // Hazard Unit
+    wire StallF;                                                                // Hazard Unit
+    wire StallD;                                                                // Hazard Unit
+    
     
     mux # ( .WL(WL) )                                                                                   // PCSrc Mux
         PCSrcMux( .A(PCBranchM), .B(PCPlus1F), .sel(PCSrc), .out(PCSrcMuxOut) );                        // PCSrc Mux
@@ -96,7 +100,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     
     pc # ( .WL(WL) )                                                                                    // Program Counter
-        programCounter( .CLK(CLK), .pc_In(PCJumpMuxOut), .pc_Out(pc_Out) );                             // Program Counter
+        programCounter( .CLK(CLK), .StallF(StallF), .pc_In(PCJumpMuxOut), .pc_Out(pc_Out) );            // Program Counter
     
     
     adder # ( .WL(WL) )                                                                                 // Program Counter Adder
@@ -107,7 +111,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
         instMemory( .addr(pc_Out), .instruction(InstrF) );                                              // Instruction Memory
     
     
-    fetch_decode_register  fetch_decode_register( .CLK(CLK), .InstrF(InstrF),                           // Fetch/Decode Register
+    fetch_decode_register  fetch_decode_register( .CLK(CLK), .StallD(StallD), .InstrF(InstrF),          // Fetch/Decode Register
         .PCPlus1F(PCPlus1F), .InstrD(InstrD),  .PCPlus1D(PCPlus1D) );                                   // Fetch/Decode Register
     
     
@@ -122,17 +126,19 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
                         .RFWD(Result), .RFRD1(RFRD1), .RFRD2(RFRD2) );                                  // Register File
     
     
-    decode_execute_register decode_execute_register(  .CLK(CLK), .RegWriteD(RegWriteD),                 // Decode/Execute Register
+    decode_execute_register decode_execute_register(  .CLK(CLK), .CLR(hazard_unit.FlushE) ,             // Decode/Execute Register
+    .RegWriteD(RegWriteD),                                                                              // Decode/Execute Register
     .MemtoReg(MemtoReg), .MemWriteD(MemWriteD), .Branch(Branch), .ALUControlD(ALUControlD),             // Decode/Execute Register
     .ALUSrc(ALUSrc), .RegDst(RegDst), .RFRD1(RFRD1), .RFRD2(RFRD2), .rs(rs), .rt(rt), .rd(rd),          // Decode/Execute Register
     .SImm(SImm), .PCPlus1D(PCPlus1D), .RegWriteE(RegWriteE), .MemtoRegE(MemtoRegE),                     // Decode/Execute Register
     .MemWriteE(MemWriteE), .BranchE(BranchE), .ALUControlE(ALUControlE), .ALUSrcE(ALUSrcE),             // Decode/Execute Register
     .RegDstE(RegDstE), .RFRD1E(RFRD1E), .RFRD2E(RFRD2E), .rsE(rsE), .rtE(rtE), .rdE(rdE),               // Decode/Execute Register
-    .SImmE(SImmE), .PCPlus1E(PCPlus1E), .shamtE(shamtE) );                                                               // Decode/Execute Register
+    .SImmE(SImmE), .PCPlus1E(PCPlus1E), .shamtE(shamtE) );                                              // Decode/Execute Register
     
     
-    hazard_unit hazard_unit( .RegWriteM(RegWriteM), .RegWriteW(RegWriteW), .rsE(rsE), .rtE(rtE),        // Hazard Unit
-     .WriteRegM(WriteRegM), .WriteRegW(WriteRegW) );                                                    // Hazard Unit
+    hazard_unit hazard_unit( .RegWriteM(RegWriteM), .RegWriteW(RegWriteW), .MemtoRegE(MemtoRegE),        // Hazard Unit
+    .rs(rs), .rt(rt), .rsE(rsE), .rtE(rtE), .WriteRegM(WriteRegM), .WriteRegW(WriteRegW),               // Hazard Unit
+    .FlushE(FlushE), .StallF(StallF), .StallD(StallD) );
     
     
     mux3 RFRD1E_mux3( .sel(hazard_unit.ForwardAE), .in_00(RFRD1E), .in_01(Result), .in_10(ALUOutM) );       // Top 3 Mux

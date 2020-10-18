@@ -3,6 +3,7 @@
 module decode_execute_register # (parameter WL = 32)
 (
     input CLK,
+    input CLR,
     input RegWriteD,
     input MemtoReg,
     input MemWriteD,
@@ -35,20 +36,41 @@ module decode_execute_register # (parameter WL = 32)
 );
     always @ (posedge CLK)
     begin
-        RegWriteE <= RegWriteD;
-        MemtoRegE <= MemtoReg;
-        MemWriteE <= MemWriteD;
-        BranchE <= Branch;
-        ALUControlE <= ALUControlD;
-        ALUSrcE <= ALUSrc;
-        RegDstE <= RegDst;
-        RFRD1E <= RFRD1;
-        RFRD2E <= RFRD2;
-        rsE <= rs;
-        rtE <= rt;
-        rdE <= rd;
-        SImmE <= SImm; 
-        PCPlus1E <= PCPlus1D;
-        shamtE <= top.shamt;
+        if(CLR)
+        begin
+            RegWriteE <= 0;
+            MemtoRegE <= 0;
+            MemWriteE <= 0;
+            BranchE <= 0;
+            ALUControlE <= 0;
+            ALUSrcE <= 0;
+            RegDstE <= 0;
+            RFRD1E <= 0;
+            RFRD2E <= 0;
+            rsE <= 0;
+            rtE <= 0;
+            rdE <= 0;
+            SImmE <= 0; 
+            PCPlus1E <= 0;
+            shamtE <= 0;
+        end
+        else
+        begin
+            RegWriteE <= RegWriteD;
+            MemtoRegE <= MemtoReg;
+            MemWriteE <= MemWriteD;
+            BranchE <= Branch;
+            ALUControlE <= ALUControlD;
+            ALUSrcE <= ALUSrc;
+            RegDstE <= RegDst;
+            RFRD1E <= RFRD1;
+            RFRD2E <= RFRD2;
+            rsE <= rs;
+            rtE <= rt;
+            rdE <= rd;
+            SImmE <= SImm; 
+            PCPlus1E <= PCPlus1D;
+            shamtE <= top.shamt;
+        end
     end
 endmodule
