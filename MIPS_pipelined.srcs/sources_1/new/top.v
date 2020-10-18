@@ -55,6 +55,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     wire [4 : 0] rdE;                                           // decode_execute_register
     wire [WL - 1 : 0] SImmE;                                    // decode_execute_register
     wire [WL - 1 : 0] PCPlus1E;                                 // decode_execute_register
+    wire [4 : 0] shamtE;                                        // decode_execute_register
     
     wire [WL - 1 : 0] PCBranch;                                 // PCBranch Adder Out
     
@@ -127,7 +128,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     .SImm(SImm), .PCPlus1D(PCPlus1D), .RegWriteE(RegWriteE), .MemtoRegE(MemtoRegE),                     // Decode/Execute Register
     .MemWriteE(MemWriteE), .BranchE(BranchE), .ALUControlE(ALUControlE), .ALUSrcE(ALUSrcE),             // Decode/Execute Register
     .RegDstE(RegDstE), .RFRD1E(RFRD1E), .RFRD2E(RFRD2E), .rsE(rsE), .rtE(rtE), .rdE(rdE),               // Decode/Execute Register
-    .SImmE(SImmE), .PCPlus1E(PCPlus1E) );                                                               // Decode/Execute Register
+    .SImmE(SImmE), .PCPlus1E(PCPlus1E), .shamtE(shamtE) );                                                               // Decode/Execute Register
     
     
     hazard_unit hazard_unit( .RegWriteM(RegWriteM), .RegWriteW(RegWriteW), .rsE(rsE), .rtE(rtE),        // Hazard Unit
@@ -153,7 +154,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     
     
     alu # (  .WL(WL) )                                                                                      // ALU
-        alu( .A( RFRD1E_mux3.out ), .B(ALUSrcOut), .shamt(shamt), .ALU_Out(ALU_Out), .zero(zero),           // ALU
+        alu( .A( RFRD1E_mux3.out ), .B(ALUSrcOut), .shamt(shamtE), .ALU_Out(ALU_Out), .zero(zero),           // ALU
                 .ALUControlE(ALUControlE) );                                                                // ALU
     
     

@@ -30,7 +30,8 @@ module decode_execute_register # (parameter WL = 32)
     output reg [4 : 0] rtE,
     output reg [4 : 0] rdE,
     output reg [WL - 1 : 0] SImmE,
-    output reg [WL - 1 : 0] PCPlus1E
+    output reg [WL - 1 : 0] PCPlus1E,
+    output reg [4 : 0] shamtE
 );
     always @ (posedge CLK)
     begin
@@ -41,15 +42,13 @@ module decode_execute_register # (parameter WL = 32)
         ALUControlE <= ALUControlD;
         ALUSrcE <= ALUSrc;
         RegDstE <= RegDst;
-        
-        
         RFRD1E <= RFRD1;
         RFRD2E <= RFRD2;
-        
         rsE <= rs;
         rtE <= rt;
         rdE <= rd;
         SImmE <= SImm; 
         PCPlus1E <= PCPlus1D;
+        shamtE <= top.shamt;
     end
 endmodule
