@@ -3,6 +3,7 @@
 module fetch_decode_register # (parameter WL = 32)
 (
     input CLK,
+    input CLR,
     input StallD,
     input [WL - 1 : 0] InstrF,
     input [WL - 1 : 0] PCPlus1F,
@@ -11,13 +12,20 @@ module fetch_decode_register # (parameter WL = 32)
 );
     initial begin InstrD <= 0; PCPlus1D <= 0; end
     
-    
     always @ (posedge CLK)
     begin
-        if(!StallD)
+        if(CLR)
         begin
-            InstrD <= InstrF;
-            PCPlus1D <= PCPlus1F;
+            InstrD <= 0;
+            PCPlus1D <= 0;
+        end
+        else
+        begin
+            if(!StallD)
+            begin
+                InstrD <= InstrF;
+                PCPlus1D <= PCPlus1F;
+            end
         end
     end
     

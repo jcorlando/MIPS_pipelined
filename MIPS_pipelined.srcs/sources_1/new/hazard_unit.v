@@ -4,42 +4,48 @@ module hazard_unit # ( parameter WL = 32 )
 (
     input RegWriteM,
     input RegWriteW,
+    input RegWriteE,
     input MemtoRegE,
+    input MemtoRegM,
+    input Branch,
+    input Jump,
     input [4 : 0] rs,
     input [4 : 0] rt,
     input [4 : 0] rsE,
     input [4 : 0] rtE,
+    input [4 : 0] WriteReg,
     input [4 : 0] WriteRegM,
     input [4 : 0] WriteRegW,
     output FlushE,
     output StallF,
     output StallD,
     output reg [1 : 0] ForwardAE,
-    output reg [1 : 0] ForwardBE
+    output reg [1 : 0] ForwardBE,
+    output reg ForwardAD,
+    output reg ForwardBD
 );
     reg lwstall = 0;
     reg lwstall_track = 0;
     reg [1 : 0] lwstall_counter = 0;
+    reg branchstall = 0;
     
-    always @ (posedge top.CLK)
-    begin
-        if(lwstall != 0 || lwstall_track != 0)
-        begin
-            if(lwstall_counter < 2)
-            begin
-                lwstall_counter <= lwstall_counter + 1;
-                lwstall_track <= 1;
-            end
-            else
-            begin
-                lwstall_counter <= 0;
-                lwstall_track <= 0;
-            end
-        end
-    end
+    always @ (posedge top.CLK)                                  // lw stall logic
+    begin                                                       // lw stall logic
+        if(lwstall != 0 || lwstall_track != 0)                  // lw stall logic
+        begin                                                   // lw stall logic
+            if(lwstall_counter < 2)                             // lw stall logic
+            begin                                               // lw stall logic
+                lwstall_counter <= lwstall_counter + 1;         // lw stall logic
+                lwstall_track <= 1;                             // lw stall logic
+            end                                                 // lw stall logic
+            else                                                // lw stall logic
+            begin                                               // lw stall logic
+                lwstall_counter <= 0;                           // lw stall logic
+                lwstall_track <= 0;                             // lw stall logic
+            end                                                 // lw stall logic
+        end                                                     // lw stall logic
+    end                                                         // lw stall logic
     
-    
-    reg lwstall = 0;
     
     always @ (*)
     begin
@@ -51,16 +57,21 @@ module hazard_unit # ( parameter WL = 32 )
         else if ( (rtE != 0) && (rtE == WriteRegW ) && RegWriteW) ForwardBE <= 2'b01;
         else ForwardBE <= 2'b00;
         
-        lwstall <= ((rs == rtE) || (rt == rtE)) && MemtoRegE;
+        
+        lwstall <= ((rs == rtE) || (rt == rtE)) && MemtoRegE;           // lw stall logic
+        
+        
+        ForwardAD <= (rs != 0) && (rs == WriteRegM) && RegWriteM;                           // Branch Mux Logic
+        ForwardBD <= (rt != 0) && (rt == WriteRegM) && RegWriteM;                           // Branch Mux Logic
+        
+        
+        branchstall <= Branch && RegWriteE && (WriteReg == rs || WriteReg == rt) ||                 // Branch Stall Logic
+                                Branch && MemtoRegM && (WriteRegM == rs || WriteRegM == rt);        // Branch Stall Logic
+        
     end
     
-    assign FlushE = lwstall;
-    assign StallF = lwstall;
-    assign StallD = lwstall;
-    
-    
-    
-    
-    
+    assign FlushE = lwstall || branchstall || Jump;
+    assign StallF = lwstall || branchstall;
+    assign StallD = lwstall || branchstall;
     
 endmodule

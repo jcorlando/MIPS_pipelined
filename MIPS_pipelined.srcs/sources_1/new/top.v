@@ -22,7 +22,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     wire [5 : 0] funct = control_Unit.funct;                    // Control Unit
     wire [25 : 0] Jaddr = control_Unit.Jaddr;                   // Control Unit
     wire signed [WL - 1 : 0] SImm = control_Unit.SImm;          // Control Unit
-    wire [WL - 1 : 0] PCJump = { PCPlus1[31:26], Jaddr };       // PC Jump Wire
+    wire [WL - 1 : 0] PCJump = { PCPlus1D[31:26], Jaddr };      // PC Jump Wire
     
     wire RegWriteD;                                             // Control Unit
     wire MemtoReg;                                              // Control Unit
@@ -89,30 +89,61 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     wire FlushE;                                                                // Hazard Unit
     wire StallF;                                                                // Hazard Unit
     wire StallD;                                                                // Hazard Unit
+    wire ForwardAD;                                                             // Hazard Unit
+    wire ForwardBD;                                                             // Hazard Unit
+    
+    wire EqualD;                                                                // Equals unit output
+    
+    wire [WL - 1 : 0] RFRD1_mux_out;                                            // RFRD1 mux out
+    wire [WL - 1 : 0] RFRD2_mux_out;                                            // RFRD2 mux out
     
     
-    mux # ( .WL(WL) )                                                                                   // PCSrc Mux
-        PCSrcMux( .A(PCBranchM), .B(PCPlus1F), .sel(PCSrc), .out(PCSrcMuxOut) );                        // PCSrc Mux
+    
+    hazard_unit hazard_unit( .RegWriteM(RegWriteM), .RegWriteW(RegWriteW), .MemtoRegM(MemtoRegM),               // Hazard Unit
+    .RegWriteE(RegWriteE), .Branch(Branch), .Jump(Jump), .MemtoRegE(MemtoRegE), .rs(rs), .rt(rt),               // Hazard Unit
+    .rsE(rsE), .rtE(rtE), .WriteReg(WriteReg), .WriteRegM(WriteRegM), .WriteRegW(WriteRegW),                    // Hazard Unit
+    .FlushE(FlushE), .StallF(StallF), .StallD(StallD), .ForwardAD(ForwardAD), .ForwardBD(ForwardBD) );          // Hazard Unit
+    
+    
+    mux # ( .WL(WL) )                                                                               // RFRD1 Mux
+        RFRD1_mux( .B(RFRD1), .A(ALUOutM), .sel(ForwardAD), .out(RFRD1_mux_out) );                  // RFRD1 Mux
+    
+    
+    mux # ( .WL(WL) )                                                                               // RFRD2 Mux
+        RFRD2_mux( .B(RFRD2), .A(ALUOutM), .sel(ForwardBD), .out(RFRD2_mux_out) );                  // RFRD2 Mux
+    
+    
+    PCBranchAdder # (.WL(WL))                                                                       // PCBranch Adder
+        myPCBranchAdder( .A(SImm), .B(PCPlus1D), .out(PCBranch) );                                  // PCBranch Adder
+    
+    equals equals( .RFRD1(RFRD1_mux_out), .RFRD2(RFRD2_mux_out), .EqualD(EqualD) );                 // Equals comparison
+    
+    
+    AndGatePCSrc andGate( .A(Branch), .B(EqualD), .out(PCSrc) );                        // PCSrc AND gate
+    
+    
+    mux # ( .WL(WL) )                                                                   // PCSrc Mux
+        PCSrcMux( .A(PCBranch), .B(PCPlus1F), .sel(PCSrc), .out(PCSrcMuxOut) );         // PCSrc Mux
     
     
     mux # ( .WL(WL) )                                                                                   // PCJump Mux
         PCJumpMux( .A(PCJump), .B(PCSrcMuxOut), .sel(Jump), .out(PCJumpMuxOut) );                       // PCJump Mux
     
     
-    pc # ( .WL(WL) )                                                                                    // Program Counter
-        programCounter( .CLK(CLK), .StallF(StallF), .pc_In(PCJumpMuxOut), .pc_Out(pc_Out) );            // Program Counter
-    
-    
     adder # ( .WL(WL) )                                                                                 // Program Counter Adder
         pcAdder( .pc_Out(pc_Out), .PCPlus1(PCPlus1F) );                                                 // Program Counter Adder
+    
+    
+    pc # ( .WL(WL) )                                                                                    // Program Counter
+        programCounter( .CLK(CLK), .StallF(StallF), .pc_In(PCJumpMuxOut), .pc_Out(pc_Out) );            // Program Counter
     
     
     inst_Mem # ( .WL(WL), .MEM_Depth(MEM_Depth) )                                                       // Instruction Memory
         instMemory( .addr(pc_Out), .instruction(InstrF) );                                              // Instruction Memory
     
     
-    fetch_decode_register  fetch_decode_register( .CLK(CLK), .StallD(StallD), .InstrF(InstrF),          // Fetch/Decode Register
-        .PCPlus1F(PCPlus1F), .InstrD(InstrD),  .PCPlus1D(PCPlus1D) );                                   // Fetch/Decode Register
+    fetch_decode_register  fetch_decode_register( .CLK(CLK), .CLR(PCSrc || Jump), .StallD(StallD),      // Fetch/Decode Register
+        .InstrF(InstrF), .PCPlus1F(PCPlus1F), .InstrD(InstrD),  .PCPlus1D(PCPlus1D) );                  // Fetch/Decode Register
     
     
     control_Unit # ( .WL(WL) )                                                                          // Control Unit
@@ -136,9 +167,7 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     .SImmE(SImmE), .PCPlus1E(PCPlus1E), .shamtE(shamtE) );                                              // Decode/Execute Register
     
     
-    hazard_unit hazard_unit( .RegWriteM(RegWriteM), .RegWriteW(RegWriteW), .MemtoRegE(MemtoRegE),        // Hazard Unit
-    .rs(rs), .rt(rt), .rsE(rsE), .rtE(rtE), .WriteRegM(WriteRegM), .WriteRegW(WriteRegW),               // Hazard Unit
-    .FlushE(FlushE), .StallF(StallF), .StallD(StallD) );
+    
     
     
     mux3 RFRD1E_mux3( .sel(hazard_unit.ForwardAE), .in_00(RFRD1E), .in_01(Result), .in_10(ALUOutM) );       // Top 3 Mux
@@ -155,10 +184,6 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
         ALUSrcMux( .A(SImmE), .B(ALUSrcMux_mux3.out), .sel(ALUSrcE), .out(ALUSrcOut) );                 // ALU source mux
     
     
-    PCBranchAdder # (.WL(WL))                                                                       // PCBranch Adder
-        myPCBranchAdder( .A(SImmE), .B(PCPlus1E), .out(PCBranch) );                                 // PCBranch Adder
-    
-    
     alu # (  .WL(WL) )                                                                                      // ALU
         alu( .A( RFRD1E_mux3.out ), .B(ALUSrcOut), .shamt(shamtE), .ALU_Out(ALU_Out), .zero(zero),           // ALU
                 .ALUControlE(ALUControlE) );                                                                // ALU
@@ -170,9 +195,6 @@ module top # (  parameter WL = 32, MEM_Depth = 512 )
     .RegWriteM(RegWriteM), .MemtoRegM(MemtoRegM), .MemWriteM(MemWriteM),                            // Execute/Memory Register
     .BranchM(BranchM), .zeroM(zeroM), .ALUOutM(ALUOutM), .WriteDataM(),                             // Execute/Memory Register
     .WriteRegM(WriteRegM), .PCBranchM(PCBranchM) );                                                 // Execute/Memory Register
-    
-    
-    AndGatePCSrc andGate( .A(BranchM), .B(zeroM), .out(PCSrc) );                                                // PCSrc AND gate
     
     
     data_Mem # ( .WL(WL), .MEM_Depth(MEM_Depth) )                                                               // Data Memory
